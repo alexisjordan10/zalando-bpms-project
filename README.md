@@ -6,57 +6,64 @@ Il comprend les processus BPMN, les formulaires utilisateur et les workers autom
 ---
 
 ## 📦 Structure du projet
-alando-bpms-project/
+
+```bash
+zalando-bpms-project/
 │
-├── bpmn/
-│ ├── OrderProcessing.bpmn # Processus principal
-│ ├── PaymentProcessing.bpmn # Sous-processus : Paiement
-│ ├── Fulfillment.bpmn # Sous-processus : Préparation en entrepôt
-│ └── Delivery.bpmn # Sous-processus : Livraison
+├── bpmn/                      
+│   ├── OrderProcessing.bpmn          # Processus principal
+│   ├── PaymentProcessing.bpmn        # Sous-processus : Paiement
+│   ├── Fulfillment.bpmn              # Sous-processus : Préparation en entrepôt
+│   └── Delivery.bpmn                 # Sous-processus : Livraison
 │
 ├── forms/
-│ └── CreateOrderForm.form # Formulaire Camunda pour "Create Order"
+│   └── CreateOrderForm.form          # Formulaire Camunda pour "Create Order"
 │
 ├── workers/
-│ └── payment_worker.py # Worker Python pour simuler le paiement
+│   └── payment_worker.py             # Worker Python pour simuler le paiement
 │
 └── README.md
 
----
+🧠 Vue d’ensemble du processus
+🎯 Processus principal : zalando.order
 
-## 🧠 Vue d’ensemble du processus
+Create Order → Tâche utilisateur (formulaire)
 
-### 🎯 Processus principal : `zalando.order`
-1. **Create Order** → Tâche utilisateur (formulaire)
-2. **Is order valid?** → Gateway de validation
-3. **Send payment request** → Tâche de service (type `payment-request-service`)
-4. **Call PaymentProcessing subprocess**
-5. **Payment successful?**
-   - ✅ Oui → `Warehouse Fulfillment` → `Delivery` → ✅ *Order completed*
-   - ❌ Non → 🛑 *Order cancelled*
+Is order valid? → Gateway de validation
 
-### 🔁 Sous-processus
-- **`zalando.payment`** → Vérification du paiement (accepté/refusé)  
-- **`zalando.fulfillment`** → Préparation de la commande en entrepôt  
-- **`zalando.delivery`** → Livraison au client final  
+Send payment request → Tâche de service (type payment-request-service)
 
----
+Call PaymentProcessing subprocess
 
-## 🧰 Prérequis
+Payment successful?
 
-- [Camunda Modeler 5+](https://camunda.com/download/modeler/)
-- [Camunda 8 SaaS](https://camunda.io/)
-- Python 3.10+
-- Bibliothèque [`pyzeebe`](https://pypi.org/project/pyzeebe/) pour les workers
+✅ Oui → Warehouse Fulfillment → Delivery → ✅ Order completed
 
----
+❌ Non → 🛑 Order cancelled
 
-## ⚙️ Installation
+🔁 Sous-processus
 
-### 1️⃣ Cloner le projet
-```bash
+zalando.payment → Vérification du paiement (accepté/refusé)
+
+zalando.fulfillment → Préparation de la commande en entrepôt
+
+zalando.delivery → Livraison au client final
+
+🧰 Prérequis
+
+Camunda Modeler 5+
+
+Camunda 8 SaaS
+
+Python 3.10+
+
+Bibliothèque pyzeebe
+ pour les workers
+⚙️ Installation
+1️⃣ Cloner le projet
 git clone https://github.com/<votre-utilisateur>/zalando-bpms-project.git
 cd zalando-bpms-project
+
 2️⃣ Installer les dépendances Python
 pip install pyzeebe
 
