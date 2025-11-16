@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 import axios from "axios";
 import { ZBClient } from "zeebe-node";
+import { getAllProducts } from "../db.js";
 
 console.log("🔧 Using CAMUNDA CLOUD mode (clusterId + region)…");
 
@@ -16,6 +16,7 @@ const zbc = new ZBClient({
 
 console.log("✅ Connected to Camunda Cloud (explicit OAuth config)");
 
+//Worker "fetch-server-time"
 zbc.createWorker({
   taskType: "fetch-server-time",
   taskHandler: async (job) => {
@@ -40,4 +41,31 @@ zbc.createWorker({
   },
 });
 
+//Worker "load-products"
+zbc.createWorker({
+  taskType: "load-products",
+  taskHandler: async (job) => {
+    try {
+      console.log("[load-products] Fetching products from DB...");
+
+      const products = await getAllProducts();
+
+      const productOptions = products.map((p) => ({
+        label: `${p.Name} (${p.Price} € – stock: ${p.Stock})`,
+        value: p.ProductId,
+      }));
+
+      console.log("[load-products] Loaded productOptions:", productOptions);
+
+      return job.complete({
+        productOptions,
+      });
+    } catch (err) {
+      console.error("[load-products] DB error:", err);
+      throw new Error("Failed to load products from DB");
+    }
+  },
+});
+
 console.log("🚀 Worker fetch-server-time is ready and waiting for jobs...");
+console.log("🚀 Worker load-products is ready and waiting for jobs...");
