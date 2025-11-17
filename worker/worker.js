@@ -1,7 +1,7 @@
 import "dotenv/config";
 import axios from "axios";
 import { ZBClient } from "zeebe-node";
-import { getAllProducts } from "../db.js";
+import { getAllProducts, decreaseStock } from "../db.js";
 
 console.log("🔧 Using CAMUNDA CLOUD mode (clusterId + region)…");
 
@@ -79,5 +79,50 @@ zbc.createWorker({
   },
 });
 
+// Worker "update-stock" – called from Warehouse Fulfillment service task
+zbc.createWorker({
+  taskType: "update-stock",
+  taskHandler: async (job) => {
+    try {
+      const { orderItems } = job.variables;
+
+      console.log("[update-stock] Received orderItems:", orderItems);
+
+      if (!Array.isArray(orderItems) || orderItems.length === 0) {
+        console.warn("[update-stock] No order items to update, finishing.");
+        return job.complete();
+      }
+
+      // For each ordered item: decrease stock in DB
+      for (const item of orderItems) {
+        const productId = item.productId;
+        // quantity field name comes from your dynamic list (we used it before)
+        const quantity = item.number_ycbg5;
+
+        if (!productId || !quantity) {
+          console.warn(
+            "[update-stock] Skipping item because productId or quantity missing:",
+            item
+          );
+          continue;
+        }
+
+        console.log(
+          `[update-stock] Decreasing stock of product ${productId} by ${quantity}`
+        );
+        await decreaseStock(productId, quantity);
+      }
+
+      console.log("[update-stock] Stock updated successfully.");
+      return job.complete();
+    } catch (err) {
+      console.error("[update-stock] DB error:", err);
+      // Let Camunda see an error -> job will be retried / handled
+      throw new Error("Failed to update stock in DB");
+    }
+  },
+});
+
 console.log("🚀 Worker fetch-server-time is ready and waiting for jobs...");
 console.log("🚀 Worker load-products is ready and waiting for jobs...");
+console.log("🚀 Worker update-stock is ready and waiting for jobs...");
