@@ -50,15 +50,27 @@ zbc.createWorker({
 
       const products = await getAllProducts();
 
+      // What you already had: options for the select
       const productOptions = products.map((p) => ({
         label: `${p.Name} (${p.Price} € – stock: ${p.Stock})`,
         value: p.ProductId,
       }));
 
+      // NEW: simple list of { productId, price } for FEEL calculations
+      const productPricesList = products.map((p) => ({
+        productId: p.ProductId,
+        price: p.Price,
+      }));
+
       console.log("[load-products] Loaded productOptions:", productOptions);
+      console.log(
+        "[load-products] Loaded productPricesList:",
+        productPricesList
+      );
 
       return job.complete({
         productOptions,
+        productPricesList,
       });
     } catch (err) {
       console.error("[load-products] DB error:", err);
